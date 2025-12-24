@@ -3,7 +3,7 @@ from typing import Optional
 
 import httpx
 
-from logging_utils import get_logger, resolve_url
+from logging_utils import get_logger, is_verbose, resolve_url
 
 
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://16.145.98.73:11434")
@@ -47,10 +47,15 @@ async def ollama_chat(
         len(user_prompt),
         host_header or "-",
     )
+    if is_verbose():
+        logger.info("Ollama request headers=%s", headers or {})
+        logger.info("Ollama request payload=%s", payload)
 
     async with httpx.AsyncClient(timeout=60, headers=headers) as client:
         response = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
         logger.info("Ollama response status=%s bytes=%s", response.status_code, len(response.content))
+        if is_verbose():
+            logger.info("Ollama response headers=%s", dict(response.headers))
         response.raise_for_status()
         data = response.json()
 

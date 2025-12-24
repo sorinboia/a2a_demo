@@ -24,6 +24,10 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
+def is_verbose() -> bool:
+    return os.getenv("VERBOSE") in {"1", "true", "TRUE", "yes", "YES"}
+
+
 def resolve_url(url: str) -> tuple[str | None, int | None, list[str]]:
     parsed = urlparse(url)
     host = parsed.hostname

@@ -12,7 +12,7 @@ from a2a.types import AgentCapabilities, AgentCard, AgentSkill, Message, Transpo
 from a2a.utils import new_agent_text_message
 from a2a.utils.message import get_message_text
 
-from logging_utils import get_logger, resolve_url
+from logging_utils import get_logger, is_verbose, resolve_url
 from ollama_client import ollama_chat
 
 
@@ -34,6 +34,8 @@ async def fetch_track_suggestions(user_prompt: str) -> str:
         port,
         ips,
     )
+    if is_verbose():
+        logger.info("Track Scout request payload=%s", {"prompt": user_prompt})
     client_config = ClientConfig(
         supported_transports=[TransportProtocol.http_json.value]
     )
