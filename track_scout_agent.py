@@ -35,7 +35,11 @@ class TrackScoutExecutor(AgentExecutor):
         )
 
         try:
-            suggestions = await ollama_chat(user_input, system_prompt=system_prompt)
+            suggestions = await ollama_chat(
+                user_input,
+                system_prompt=system_prompt,
+                host_header="agent1.lab",
+            )
         except Exception as exc:  # pragma: no cover - demo fallback
             await event_queue.enqueue_event(
                 new_agent_text_message(f"Ollama error: {exc}")

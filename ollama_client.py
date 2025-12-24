@@ -13,6 +13,7 @@ async def ollama_chat(
     *,
     system_prompt: Optional[str] = None,
     model: Optional[str] = None,
+    host_header: Optional[str] = None,
     temperature: Optional[float] = 0.7,
 ) -> str:
     messages = []
@@ -28,7 +29,8 @@ async def ollama_chat(
     if temperature is not None:
         payload["options"] = {"temperature": temperature}
 
-    async with httpx.AsyncClient(timeout=60) as client:
+    headers = {"Host": host_header} if host_header else None
+    async with httpx.AsyncClient(timeout=60, headers=headers) as client:
         response = await client.post(f"{OLLAMA_URL}/api/chat", json=payload)
         response.raise_for_status()
         data = response.json()

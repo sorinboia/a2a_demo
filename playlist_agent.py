@@ -77,6 +77,7 @@ class PlaylistOrchestratorExecutor(AgentExecutor):
             playlist = await ollama_chat(
                 combined_prompt,
                 system_prompt=system_prompt,
+                host_header="agent2.lab",
                 temperature=0.6,
             )
         except Exception as exc:  # pragma: no cover - demo fallback
