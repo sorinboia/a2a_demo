@@ -9,12 +9,15 @@ from a2a.server.tasks.inmemory_task_store import InMemoryTaskStore
 from a2a.types import AgentCapabilities, AgentCard, AgentSkill, TransportProtocol
 from a2a.utils import new_agent_text_message
 
+from logging_utils import get_logger
 from ollama_client import ollama_chat
 
 
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("SCOUT_PORT", "9101"))
 PUBLIC_URL = os.getenv("SCOUT_PUBLIC_URL", f"http://localhost:{PORT}/")
+
+logger = get_logger("track_scout")
 
 
 class TrackScoutExecutor(AgentExecutor):
@@ -27,6 +30,7 @@ class TrackScoutExecutor(AgentExecutor):
                 )
             )
             return
+        logger.info("Received request: %s", user_input)
 
         system_prompt = (
             "You are Track Scout. Suggest 10-12 tracks based on the user's request. "
@@ -46,6 +50,7 @@ class TrackScoutExecutor(AgentExecutor):
             )
             return
 
+        logger.info("Sending %s chars of suggestions", len(suggestions))
         await event_queue.enqueue_event(new_agent_text_message(suggestions))
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:

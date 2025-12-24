@@ -12,6 +12,7 @@ from a2a.types import AgentCapabilities, AgentCard, AgentSkill, Message, Transpo
 from a2a.utils import new_agent_text_message
 from a2a.utils.message import get_message_text
 
+from logging_utils import get_logger, resolve_url
 from ollama_client import ollama_chat
 
 
@@ -21,8 +22,18 @@ PUBLIC_URL = os.getenv("ORCH_PUBLIC_URL", f"http://localhost:{PORT}/")
 SCOUT_PORT = os.getenv("SCOUT_PORT", "9101")
 SCOUT_URL = os.getenv("SCOUT_URL", f"http://localhost:{SCOUT_PORT}/")
 
+logger = get_logger("playlist_orch")
+
 
 async def fetch_track_suggestions(user_prompt: str) -> str:
+    host, port, ips = resolve_url(SCOUT_URL)
+    logger.info(
+        "Calling Track Scout at %s host=%s port=%s ips=%s",
+        SCOUT_URL,
+        host,
+        port,
+        ips,
+    )
     client_config = ClientConfig(
         supported_transports=[TransportProtocol.http_json.value]
     )
@@ -39,7 +50,9 @@ async def fetch_track_suggestions(user_prompt: str) -> str:
     finally:
         await client.close()
 
-    return "\n".join(collected).strip()
+    result = "\n".join(collected).strip()
+    logger.info("Track Scout returned %s chars", len(result))
+    return result
 
 
 class PlaylistOrchestratorExecutor(AgentExecutor):
@@ -52,6 +65,7 @@ class PlaylistOrchestratorExecutor(AgentExecutor):
                 )
             )
             return
+        logger.info("Received request: %s", user_input)
 
         try:
             scout_text = await fetch_track_suggestions(user_input)
@@ -86,6 +100,7 @@ class PlaylistOrchestratorExecutor(AgentExecutor):
             )
             return
 
+        logger.info("Sending %s chars of playlist", len(playlist))
         await event_queue.enqueue_event(new_agent_text_message(playlist))
 
     async def cancel(self, context: RequestContext, event_queue: EventQueue) -> None:
